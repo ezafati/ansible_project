@@ -5,20 +5,24 @@ from ansible.inventory.manager import InventoryManager
 from ansible.playbook.play import Play
 from ansible.executor.task_queue_manager import TaskQueueManager
 from utils import ResultCallback
-
 from ansible import context
 
+INVENTORY_PATH = ''
 
-def get_host(hostname, inventorie_path):
+
+def get_host(fqdn, inventorie_path):
+    """get the ansible hostname giving the fqdn (hostname)"""
     loader = DataLoader()
     inventory = InventoryManager(loader=loader, sources=inventorie_path)
     hosts_list = inventory._inventory.hosts
     for host in hosts_list:
-        if hosts_list[host].vars['ansible_ssh_host'] == hostname:
+        if hosts_list[host].vars['ansible_ssh_host'] == fqdn:
             return host
 
 
 def launch_play(user, play_src, inventory_path):
+    """launch the task giving in play source in the
+    remote host indicated in the inventory"""
     context.CLIARGS = ImmutableDict(connection='ssh', remote_user=user, forks=10, become=True,
                                     become_method='sudo', become_user='root', check=False, diff=False)
     loader = DataLoader()
@@ -36,12 +40,17 @@ def launch_play(user, play_src, inventory_path):
     tqm.run(play)
 
 
-play_source = dict(
-    name="Ansible Play",
-    hosts='localhost',
-    gather_facts='no',
-    tasks=[
-        dict(action=dict(module='shell', args='ls'), register='shell_out'),
-        dict(action=dict(module='debug', args=dict(msg='{{shell_out.stdout}}')))
-    ]
-)
+if __name__ == '__main__':
+    hostname = ''
+    host = get_host(fqdn=hostname, inventorie_path=INVENTORY_PATH)
+    play_source = dict(
+        name="Ansible Play",
+        hosts='localhost',
+        gather_facts='no',
+        tasks=[
+            dict(action=dict(module='shell', args='ls'), register='shell_out'),
+            dict(action=dict(module='debug', args=dict(msg='{{shell_out.stdout}}')))
+        ]
+    )
+
+    launch_play(user='myuser', play_src=play_source, inventory_path=INVENTORY_PATH)

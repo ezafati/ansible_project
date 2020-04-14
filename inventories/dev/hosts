@@ -1,0 +1,2 @@
+[group_name]
+host_name ansible_ssh_host=hello.domain.com
