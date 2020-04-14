@@ -42,15 +42,18 @@ def launch_play(user, play_src, inventory_path):
 
 if __name__ == '__main__':
     hostname = ''
+    args1 = ''
     host = get_host(fqdn=hostname, inventorie_path=INVENTORY_PATH)
     play_source = dict(
         name="Ansible Play",
-        hosts='localhost',
-        gather_facts='no',
+        hosts=host,
+        gather_facts='yes',
         tasks=[
-            dict(action=dict(module='shell', args='ls'), register='shell_out'),
-            dict(action=dict(module='debug', args=dict(msg='{{shell_out.stdout}}')))
+            dict(action=dict(module='script', args='example.py --args1 {0}'.format(args1)),
+                 args=dict(excutable='python'),register='python_out'),
+            dict(action=dict(module='debug', args=dict(msg='{{python_out.stdout}}')))
         ]
     )
 
-    launch_play(user='myuser', play_src=play_source, inventory_path=INVENTORY_PATH)
+    launch_play(user='myuser', play_src=play_source, inventory_path=INVENTORY_PATH) # execute the python script at the
+    # remote host
