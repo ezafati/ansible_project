@@ -9,12 +9,33 @@ from utils import ResultCallback
 
 from ansible import context
 
-context.CLIARGS = ImmutableDict(connection='ssh', remote_user='ezafati', forks=10,  become=True,
-                                become_method='sudo', become_user='root', check=False, diff=False)
 
-loader = DataLoader()
-inventory = InventoryManager(loader=loader, sources='localhost,')
-variable_manager = VariableManager(loader=loader, inventory=inventory)
+def get_host(hostname, inventorie_path):
+    loader = DataLoader()
+    inventory = InventoryManager(loader=loader, sources=inventorie_path)
+    hosts_list = inventory._inventory.hosts
+    for host in hosts_list:
+        if hosts_list[host].vars['ansible_ssh_host'] == hostname:
+            return host
+
+
+def launch_play(user, play_src, inventory_path):
+    context.CLIARGS = ImmutableDict(connection='ssh', remote_user=user, forks=10, become=True,
+                                    become_method='sudo', become_user='root', check=False, diff=False)
+    loader = DataLoader()
+    inventory = InventoryManager(loader=loader, sources=inventory_path)
+    variable_manager = VariableManager(loader=loader, inventory=inventory)
+    play = Play().load(play_src, variable_manager=variable_manager, loader=loader)
+    results_callback = ResultCallback()
+    tqm = TaskQueueManager(
+        inventory=inventory,
+        variable_manager=variable_manager,
+        loader=loader,
+        passwords=dict(),
+        stdout_callback=results_callback,
+    )
+    tqm.run(play)
+
 
 play_source = dict(
     name="Ansible Play",
@@ -25,18 +46,3 @@ play_source = dict(
         dict(action=dict(module='debug', args=dict(msg='{{shell_out.stdout}}')))
     ]
 )
-
-play = Play().load(play_source, variable_manager=variable_manager, loader=loader)
-results_callback = ResultCallback()
-
-tqm = TaskQueueManager(
-    inventory=inventory,
-    variable_manager=variable_manager,
-    loader=loader,
-    passwords=dict(),
-    stdout_callback=results_callback,
-    # Use our custom callback instead of the ``default`` callback plugin, which prints to stdout
-)
-result = tqm.run(play)
-
-#print(result)

@@ -9,6 +9,9 @@ class ResultCallback(CallbackBase):
     the end of the execution, look into utilizing the ``json`` callback plugin
     or writing your own custom callback plugin
     """
+    def __init__(self, result=None):
+        super(ResultCallback, self).__init__()
+        self.result = result
 
     def v2_runner_on_ok(self, result, **kwargs):
         """Print a json representation of the result
