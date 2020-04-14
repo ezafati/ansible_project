@@ -2,7 +2,6 @@ from ansible.module_utils.common.collections import ImmutableDict
 from ansible.parsing.dataloader import DataLoader
 from ansible.vars.manager import VariableManager
 from ansible.inventory.manager import InventoryManager
-from ansible.executor.playbook_executor import PlaybookExecutor
 from ansible.playbook.play import Play
 from ansible.executor.task_queue_manager import TaskQueueManager
 from utils import ResultCallback
